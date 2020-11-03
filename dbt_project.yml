@@ -1,6 +1,6 @@
 name: acme
 
-profile: playbook
+profile: default
 
 version: '1.0'
 
