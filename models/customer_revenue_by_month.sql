@@ -1,6 +1,8 @@
 with subscription_periods as (
 
-    select * from {{ ref('subscription_periods') }}
+    /*select * from {{ ref('subscription_periods') }}*/
+    select * from `zdroj-platby.dbt_acme.20201104_subscription_periods`
+    
 
 ),
 
@@ -15,8 +17,8 @@ customers as (
 
     select
         customer_id,
-        date_trunc('month', min(start_date)) as date_month_start,
-        date_trunc('month', max(end_date)) as date_month_end
+        date_trunc(min(start_date), month) as date_month_start,
+        date_trunc(max(end_date), month) as date_month_end
 
     from subscription_periods
 
@@ -73,17 +75,21 @@ final as (
         mrr > 0 as is_active,
 
         -- calculate first and last months
-        min(case when is_active then date_month end) over (
+        min(case when mrr > 0 then date_month end) over (
             partition by customer_id
         ) as first_active_month,
 
-        max(case when is_active then date_month end) over (
+        max(case when mrr > 0 then date_month end) over (
             partition by customer_id
         ) as last_active_month,
 
         -- calculate if this record is the first or last month
-        first_active_month = date_month as is_first_month,
-        last_active_month = date_month as is_last_month
+        min(case when mrr > 0 then date_month end) over (
+            partition by customer_id
+        ) = date_month as is_first_month,
+        max(case when mrr > 0 then date_month end) over (
+            partition by customer_id
+        ) = date_month as is_last_month
 
     from joined
 
