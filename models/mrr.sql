@@ -4,8 +4,16 @@ with unioned as (
 
     union all
 
-    select * from {{ ref('customer_churn_month') }}
-
+    /*select * from {{ ref('customer_churn_month') }}*/
+    select mrr.date_month, 
+    mrr.customer_id, 
+    mrr.mrr, 
+    mrr.is_active, 
+    mrr.first_active_month, 
+    mrr.last_active_month, 
+    mrr.is_first_month, 
+    mrr.is_last_month
+    from {{ ref('customer_churn_month') }}
 ),
 
 -- get prior month MRR and calculate MRR change
@@ -24,7 +32,10 @@ mrr_with_changes as (
             0
         ) as previous_month_mrr,
 
-        mrr - previous_month_mrr as mrr_change
+        mrr - coalesce(
+            lag(mrr) over (partition by customer_id order by date_month),
+            0
+        ) as mrr_change
 
     from unioned
 
