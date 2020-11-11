@@ -68,7 +68,7 @@ joined as (
 final as (
 
     select
-        date_month,
+        date(date_month) as date_month,
         customer_id,
         mrr,
 
